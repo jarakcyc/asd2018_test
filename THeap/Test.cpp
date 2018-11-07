@@ -3,10 +3,12 @@
 #include "UnitTestFramework.h"
 #include "Test.h"
 
-#include "TVector.cpp"
-#include "THeap.cpp"
+#include "TVector.h"
+#include "THeap.h"
 
 using namespace std;
+
+mt19937 rnd(time(NULL));
 
 void TestAll() {
     TestRunner tr;
@@ -32,6 +34,21 @@ void TestTVector() {
         a.pop_back();
         Assert(a.is_empty(), "TestTVector_test_4");
     }
+    {
+        TVector<int> v;
+        vector<int> stdv;
+        const int bnd = 1e7 + 7;
+        for (int i = 0; i < 1e5; ++i) {
+            int x = rnd() % bnd;
+            v.push_back(x);
+            stdv.push_back(x);
+        }
+        for (int i = 0; i < 1e5; ++i) {
+            Assert(v.back() == stdv.back(), "TestTVector_test_5");
+            v.pop_back();
+            stdv.pop_back();
+        }
+    }
 }
 
 void TestTHeap() {
@@ -45,5 +62,20 @@ void TestTHeap() {
         Assert(heap.get_min() == 1, "TestTHeap_test_3");
         Assert(heap.extract_min() == 1, "TestTHeap_test_4");
         Assert(heap.get_min() == 3, "TestTHeap_test_5");
+    }
+    {
+        THeap<int> heap;
+        priority_queue<int, vector<int>, greater<int> > std_heap;
+        const int bnd = 1e7 + 7;
+        for (int i = 0; i < 1e5; ++i) {
+            int x = rnd() % bnd;
+            heap.insert(x);
+            std_heap.push(x);
+        }
+        for (int i = 0; i < 1e5; ++i) {
+            Assert(heap.get_min() == std_heap.top(), "TestTVector_test_6");
+            heap.extract_min();
+            std_heap.pop();
+        }
     }
 }
