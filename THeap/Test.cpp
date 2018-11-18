@@ -78,4 +78,88 @@ void TestTHeap() {
             std_heap.pop();
         }
     }
+    {
+        THeap<int> heap;
+
+        auto it5 = heap.insert(5);
+        auto it3 = heap.insert(3);
+        auto it1 = heap.insert(1);
+        auto it4 = heap.insert(4);
+
+        heap.erase(it3);
+        Assert(heap.get_min() == 1, "Test_Heap_#1");
+
+        heap.erase(it1);
+        Assert(heap.get_min() == 4, "Test_Heap_#2");
+
+        try {
+            heap.erase(it1);
+        } catch (...) {
+            cerr << "caught exception" << endl;
+        }
+
+        heap.erase(it4);
+        Assert(heap.get_min() == 5, "Test_Heap_#3");
+
+        heap.erase(it5);
+        Assert(heap.is_empty(), "Test_Heap_#4");
+    }
+    {
+        THeap<int> heap;
+
+        auto it2 = heap.insert(2);
+        auto it1 = heap.insert(1);
+        auto it4 = heap.insert(4);
+        auto it5 = heap.insert(5);
+
+        heap.change(it1, 5);
+        Assert(heap.get_min() == 2, "Test_Heap_Change_1");
+
+        heap.change(it4, 1);
+        Assert(heap.get_min() == 1, "Test_Heap_Change_2");
+    }
+    {
+        THeap<int> heap;
+        vector<int> q;
+
+        const int n = 1000;
+
+        vector<pair<THeap<int>::Pointer, int> > order;
+
+        for (int i = 0; i < n; ++i) {
+            int x = rnd() % n;
+            order.push_back(make_pair(heap.insert(x), x));
+            q.push_back(x);
+        }
+
+        shuffle(order.begin(), order.end(), rnd);
+
+        vector<int> foo;
+        for (int i = 0; i < n; ++i) {
+            sort(q.begin(), q.end());
+            Assert(q[0] == heap.get_min(), "Heap_erase_test");
+
+            auto p = order.back();
+            order.pop_back();
+
+            heap.erase(p.first);
+
+            bool found = false;
+            while (!q.empty()) {
+                int cur = q.back();
+                q.pop_back();
+
+                if (cur == p.second && !found) {
+                    found = true;
+                } else {
+                    foo.push_back(cur);
+                }
+            }
+
+            while (!foo.empty()) {
+                q.push_back(foo.back());
+                foo.pop_back();
+            }
+        }
+    }
 }

@@ -9,48 +9,46 @@ template<class Key>
 class THeap;
 
 template<class Key>
-class Pointer;
-
-template<class Key>
-class Pointer {
-    friend THeap<Key>;
-public:
-    Pointer(int _index);
-private:
-    int index;
-};
-
-template<class Key>
 class THeap {
 public:
     THeap();
 
     void swap(int ind_1, int ind_2);
-
     bool is_empty() const;
-
-    Pointer<Key> insert(Key x);
-
+    class Pointer;
+    Pointer insert(Key x);
     Key extract_min();
-
     Key get_min() const;
-
     int get_size() const;
-
-    void erase(Pointer<Key> ptr);
-
-    void change(Pointer<Key> ptr, Key key);
+    void erase(Pointer& ptr);
+    void change(Pointer ptr, Key key);
 
     template<class Iterator>
     void heapify(Iterator begin, Iterator end);
 
     void optimize(size_t insertCount, size_t extractCount);
+
+    class Node {
+    friend THeap<Key>;
+    private:
+        Node(Key _key, int _index);
+
+        Key value;
+        int index;
+    };
+
+    class Pointer {
+    friend THeap<Key>;
+    private:
+        Pointer(Node* node);
+
+        Node* ptr;
+    };
 private:
     int dimension;
     int n_elements;
 
-    TVector<Key> a;
-    TVector<Pointer<Key>* > pts;
+    TVector<Node*> a;
 
     void sift_up(int index);
 
@@ -58,14 +56,20 @@ private:
 };
 
 template<class Key>
-Pointer<Key>::Pointer(int _index) :
-    index(_index)
-{}
-
-template<class Key>
 THeap<Key>::THeap() {
     dimension = 2;
     n_elements = 0;
+}
+
+template<class Key>
+THeap<Key>::Node::Node(Key _key, int _index) {
+    value = _key;
+    index = _index;
+}
+
+template<class Key>
+THeap<Key>::Pointer::Pointer(Node* node) {
+    ptr = node;
 }
 
 template<class Key>
@@ -75,17 +79,16 @@ bool THeap<Key>::is_empty() const {
 
 template<class Key>
 void THeap<Key>::swap(int ind_1, int ind_2) {
-    assert(pts[ind_1]->index == ind_1);
-    assert(pts[ind_2]->index == ind_2);
+    assert(a[ind_1]->index == ind_1);
+    assert(a[ind_2]->index == ind_2);
 
     std::swap(a[ind_1], a[ind_2]);
-    std::swap(pts[ind_1], pts[ind_2]);
-    std::swap(pts[ind_1]->index, pts[ind_2]->index);
+    std::swap(a[ind_1]->index, a[ind_2]->index);
 }
 
 template<class Key>
 void THeap<Key>::sift_up(int x) {
-    while (x > 0 && a[x] < a[(x - 1) / dimension]) {
+    while (x > 0 && a[x]->value < a[(x - 1) / dimension]->value) {
         swap(x, (x - 1) / dimension);
         x = (x - 1) / dimension;
     }
@@ -97,7 +100,7 @@ void THeap<Key>::sift_down(int x) {
         int minIndex = x;
         for (int i = 0; i < dimension && dimension * x + i + 1 < n_elements; ++i) {
             int curIndex = x * dimension + i + 1;
-            if (a[curIndex] < a[minIndex])
+            if (a[curIndex]->value < a[minIndex]->value)
                 minIndex = curIndex;
         }
         if (minIndex == x)
@@ -110,13 +113,14 @@ void THeap<Key>::sift_down(int x) {
 }
 
 template<class Key>
-Pointer<Key> THeap<Key>::insert(Key x) {
-    Pointer<Key>* new_pointer = new Pointer<Key>(n_elements);
+typename THeap<Key>::Pointer THeap<Key>::insert(Key x) {
+    Node* new_node = new Node(x, a.size());
 
-    a.push_back(x);
-    pts.push_back(new_pointer);
+    a.push_back(new_node);
     sift_up(n_elements);
     n_elements++;
+
+    return Pointer(new_node);
 }
 
 template<class Key>
@@ -125,12 +129,11 @@ Key THeap<Key>::extract_min() {
         throw std::invalid_argument("heap is empty");
     }
 
-    Key value = a[0];
+    Key value = a[0]->value;
     swap(0, n_elements - 1);
     n_elements--;
 
     a.pop_back();
-    pts.pop_back();
 
     sift_down(0);
 
@@ -139,7 +142,7 @@ Key THeap<Key>::extract_min() {
 
 template<class Key>
 Key THeap<Key>::get_min() const {
-    return a[0];
+    return a[0]->value;
 }
 
 template<class Key>
@@ -148,22 +151,28 @@ int THeap<Key>::get_size() const {
 }
 
 template<class Key>
-void THeap<Key>::erase(Pointer<Key> ptr) {
-    int id = ptr->index;
+void THeap<Key>::erase(Pointer& ptr) {
+    if (ptr.ptr == nullptr) {
+        throw std::out_of_range("no such element");
+    }
+
+    int id = ptr.ptr->index;
     swap(id, n_elements - 1);
     n_elements--;
 
     a.pop_back();
-    pts.pop_back();
 
     sift_down(id);
+
+    delete ptr.ptr;
+    ptr.ptr = nullptr;
 }
 
 template<class Key>
-void THeap<Key>::change(Pointer<Key> ptr, Key key) {
-    int id = ptr->index;
+void THeap<Key>::change(Pointer ptr, Key key) {
+    int id = ptr.ptr->index;
 
-    a[id] = key;
+    a[id]->value = key;
 
     sift_up(id);
     sift_down(id);
@@ -175,9 +184,8 @@ void THeap<Key>::heapify(Iterator begin, Iterator end) {
     Iterator it = begin;
 
     while (it != end) {
-        Pointer<Key>* new_pointer = new Pointer<Key>(n_elements);
-        a.push_back(*it);
-        pts.push_back(new_pointer);
+        Node* new_node = new Node(n_elements);
+        a.push_back(new_node);
         n_elements++;
 
         it++;
@@ -192,8 +200,9 @@ void THeap<Key>::optimize(size_t insertCount, size_t extractCount) {
     /*
     a = insertCount
     b = extractCount
-
     a * log(n, k) - insert
     b * k * log(n, k) - extract
     */
+
+    dimension = max((size_t)2, insertCount / extractCount);
 }

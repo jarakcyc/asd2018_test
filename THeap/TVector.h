@@ -12,12 +12,14 @@ public:
 
     void pop_back();
 
+    int size() const;
+
     T back();
 
     T& operator [] (int index) const;
 private:
     int capasity;
-    int size;
+    int real_size;
     T* buffer;
 
     void Increase();
@@ -28,7 +30,7 @@ private:
 template<class T>
 TVector<T>::TVector() :
     capasity(0),
-    size(0)
+    real_size(0)
 {}
 
 template<class T>
@@ -38,17 +40,22 @@ TVector<T>::~TVector() {
 
 template<class T>
 bool TVector<T>::is_empty() const {
-    return (size == 0);
+    return (real_size == 0);
+}
+
+template<class T>
+int TVector<T>::size() const {
+    return real_size;
 }
 
 template<class T>
 void TVector<T>::push_back(T element) {
-    if (size == capasity) {
+    if (real_size == capasity) {
         Increase();
     }
 
-    buffer[size] = element;
-    size++;
+    buffer[real_size] = element;
+    real_size++;
 }
 
 template<class T>
@@ -57,19 +64,19 @@ void TVector<T>::pop_back() {
         throw std::out_of_range("no elements");
     }
 
-    size--;
+    real_size--;
 
-    if (size * 4 < capasity) {
+    if (real_size * 4 < capasity) {
         Decrease();
     }
 }
 
 template<class T>
 T TVector<T>::back() {
-    if (size == 0) {
+    if (real_size == 0) {
         throw std::invalid_argument("no elements");
     }
-    return buffer[size - 1];
+    return buffer[real_size - 1];
 }
 
 template<class T>
@@ -88,7 +95,7 @@ void TVector<T>::Increase() {
     capasity *= 2;
     T* new_buffer = new T[capasity];
 
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < real_size; ++i) {
         new_buffer[i] = buffer[i];
     }
 
@@ -102,7 +109,7 @@ void TVector<T>::Decrease() {
     capasity /= 2;
     T* new_buffer = new T[capasity];
 
-    for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < real_size; ++i) {
         new_buffer[i] = buffer[i];
     }
 
