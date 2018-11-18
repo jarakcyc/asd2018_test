@@ -185,7 +185,7 @@ Key FibonacciHeap<Key>::extract_min() {
 		children.root->parent = NULL;
 
 		setmin(children.min_node, children.root);
-		children.last_root = children.root;
+        children.last_root = children.root;
 
 		children.root = children.root->right_brother;
 	}
@@ -205,7 +205,7 @@ Key FibonacciHeap<Key>::extract_min() {
 		root = vertex->right_brother;
 
 		if (min_node == last_root) {
-          	last_root = vertex->right_brother;
+            last_root = vertex->right_brother;
 		}
 	}
 
