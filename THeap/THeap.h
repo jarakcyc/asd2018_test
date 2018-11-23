@@ -10,8 +10,20 @@ class THeap;
 
 template<class Key>
 class THeap {
+private:
+    class Node {
+    friend THeap<Key>;
+    private:
+        Node(Key _key, int _index);
+
+        Key value;
+        int index;
+    };
 public:
     THeap();
+
+    template<class Iterator>
+    THeap(Iterator begin, Iterator end);
 
     void swap(int ind_1, int ind_2);
     bool is_empty() const;
@@ -23,19 +35,7 @@ public:
     void erase(Pointer& ptr);
     void change(Pointer ptr, Key key);
 
-    template<class Iterator>
-    void heapify(Iterator begin, Iterator end);
-
     void optimize(size_t insertCount, size_t extractCount);
-
-    class Node {
-    friend THeap<Key>;
-    private:
-        Node(Key _key, int _index);
-
-        Key value;
-        int index;
-    };
 
     class Pointer {
     friend THeap<Key>;
@@ -126,7 +126,7 @@ typename THeap<Key>::Pointer THeap<Key>::insert(Key x) {
 template<class Key>
 Key THeap<Key>::extract_min() {
     if (is_empty()) {
-        throw std::invalid_argument("heap is empty");
+        throw std::out_of_range("heap is empty");
     }
 
     Key value = a[0]->value;
@@ -180,7 +180,7 @@ void THeap<Key>::change(Pointer ptr, Key key) {
 
 template<class Key>
 template<class Iterator>
-void THeap<Key>::heapify(Iterator begin, Iterator end) {
+THeap<Key>::THeap(Iterator begin, Iterator end) {
     Iterator it = begin;
 
     while (it != end) {

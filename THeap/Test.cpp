@@ -64,6 +64,7 @@ void TestTHeap() {
         Assert(heap.get_min() == 3, "TestTHeap_test_5");
     }
     {
+        int start = clock();
         THeap<int> heap;
         priority_queue<int, vector<int>, greater<int> > std_heap;
         const int bnd = 1e7 + 7;
@@ -77,6 +78,7 @@ void TestTHeap() {
             heap.extract_min();
             std_heap.pop();
         }
+        cerr << "time used:" << (clock() - start) / 1000.0 << endl;
     }
     {
         THeap<int> heap;
