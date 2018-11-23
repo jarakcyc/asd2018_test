@@ -21,7 +21,6 @@ private:
         Node* parent;
 
         Node* right_brother;
-        Node* left_brother;
 
         Node* first_son;
         Node* last_son;
@@ -66,7 +65,6 @@ private:
 
     void setmin(Node*& node, Node* new_node);
     void set_next_node(Node*& head, Node*& current, Node*& next);
-    void set_left_brother(Node*& node, Node* brother);
     void set_right_brother(Node*& node, Node* brother);
     void clear(Node* node);
 };
@@ -84,7 +82,6 @@ TBinomialHeap<Key>::Node::Node(Key _key) {
     parent = nullptr;
 
     right_brother = nullptr;
-    left_brother = nullptr;
 
     first_son = nullptr;
     last_son = nullptr;
@@ -118,14 +115,6 @@ void TBinomialHeap<Key>::setmin(Node*& node, Node* new_node) {
 }
 
 template<class Key>
-void TBinomialHeap<Key>::set_left_brother(Node*& node, Node* brother) {
-    if (node == nullptr) {
-        return;
-    }
-    node->left_brother = brother;
-}
-
-template<class Key>
 void TBinomialHeap<Key>::set_right_brother(Node*& node, Node* brother) {
     if (node == nullptr) {
         return;
@@ -141,7 +130,6 @@ void TBinomialHeap<Key>::set_next_node(Node*& head, Node*& current, Node*& next)
         next = next->right_brother;
     } else {
         set_right_brother(current, next);
-        set_left_brother(next, current);
 
         current = current->right_brother;
         next = next->right_brother;
@@ -223,10 +211,8 @@ void TBinomialHeap<Key>::merge(TBinomialHeap<Key> &otherHeap) {
                 Node* new_head = head->right_brother;
 
                 set_right_brother(new_head, head);
-                set_left_brother(new_head, head->left_brother);
 
                 set_right_brother(head, tmp);
-                set_left_brother(head, new_head);
                 head = new_head;
 
                 new_root = new_head;
@@ -237,10 +223,8 @@ void TBinomialHeap<Key>::merge(TBinomialHeap<Key> &otherHeap) {
                 Node* new_head = head->right_brother;
 
                 set_right_brother(new_head, head);
-                set_left_brother(new_head, previous);
 
                 set_right_brother(head, tmp);
-                set_left_brother(head, new_head);
                 head = new_head;
             }
         }
@@ -251,17 +235,14 @@ void TBinomialHeap<Key>::merge(TBinomialHeap<Key> &otherHeap) {
             tmp->parent = head;
 
             set_right_brother(head, tmp->right_brother);
-            set_left_brother(tmp->right_brother, head);
 
             set_right_brother(tmp, nullptr);
-            set_left_brother(tmp, nullptr);
 
             if (head->first_son == nullptr) {
                 head->first_son = tmp;
                 head->last_son = tmp;
             } else {
                 head->last_son->right_brother = tmp;
-                set_left_brother(tmp, head->last_son);
                 head->last_son = tmp;
             }
 
@@ -318,10 +299,8 @@ Key TBinomialHeap<Key>::extract_min() {
             vertex = vertex->right_brother;
         }
         vertex->right_brother = min_node->right_brother;
-        set_left_brother(min_node->right_brother, vertex);
     } else {
         root = vertex->right_brother;
-        set_left_brother(root, nullptr);
     }
 
     children.root = min_node->first_son;
