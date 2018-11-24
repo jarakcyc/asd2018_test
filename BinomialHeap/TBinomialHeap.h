@@ -27,7 +27,7 @@ private:
 
         Key key;
 
-        Link* user_pointer;
+        Link* user_pointer_copy;
 
         int degree;
     };
@@ -41,6 +41,8 @@ private:
     };
 public:
     TBinomialHeap();
+    ~TBinomialHeap();
+
     bool is_empty() const;
     class Pointer;
     Pointer insert(Key key);
@@ -53,6 +55,7 @@ public:
     class Pointer {
     public:
         Pointer();
+        ~Pointer();
     friend TBinomialHeap<Key>;
     private:
         Pointer(Link* _ptr);
@@ -86,7 +89,12 @@ TBinomialHeap<Key>::Node::Node(Key _key) {
     first_son = nullptr;
     last_son = nullptr;
 
-    user_pointer = nullptr;
+    user_pointer_copy = nullptr;
+}
+
+template<class Key>
+TBinomialHeap<Key>::~TBinomialHeap() {
+    clear(root);
 }
 
 template<class Key>
@@ -97,6 +105,13 @@ TBinomialHeap<Key>::Link::Link(Node* node) {
 template<class Key>
 TBinomialHeap<Key>::Pointer::Pointer() {
     ptr = nullptr;
+}
+
+template<class Key>
+TBinomialHeap<Key>::Pointer::~Pointer() {
+    if (ptr != nullptr && ptr->link_node == nullptr) {
+        delete ptr;
+    }
 }
 
 template<class Key>
@@ -146,7 +161,9 @@ void TBinomialHeap<Key>::clear(Node* node) {
     if (node == nullptr) {
         return;
     }
+    clear(node->first_son);
     clear(node->right_brother);
+    node->user_pointer_copy->link_node = nullptr;
     delete node;
 }
 
@@ -158,6 +175,8 @@ void TBinomialHeap<Key>::merge(TBinomialHeap<Key> &otherHeap) {
 
     Node* child_1 = root;
     Node* child_2 = otherHeap.root;
+
+    otherHeap.root = nullptr;
 
     while (child_1 != nullptr && child_2 != nullptr) {
         bool first = false;
@@ -262,7 +281,7 @@ typename TBinomialHeap<Key>::Pointer TBinomialHeap<Key>::insert(Key key) {
     new_heap.root = new Node(key);
 
     Link* new_link = new Link(new_heap.root);
-    new_heap.root->user_pointer = new_link;
+    new_heap.root->user_pointer_copy = new_link;
 
     merge(new_heap);
 
@@ -305,7 +324,7 @@ Key TBinomialHeap<Key>::extract_min() {
 
     children.root = min_node->first_son;
 
-    min_node->user_pointer->link_node = nullptr;
+    min_node->user_pointer_copy->link_node = nullptr;
     delete min_node;
 
     merge(children);
@@ -329,8 +348,8 @@ void TBinomialHeap<Key>::erase(Pointer& pointer) {
         Node* par = node->parent;
 
         std::swap(node->key, par->key);
-        std::swap(node->user_pointer->link_node, par->user_pointer->link_node);
-        std::swap(node->user_pointer, par->user_pointer);
+        std::swap(node->user_pointer_copy->link_node, par->user_pointer_copy->link_node);
+        std::swap(node->user_pointer_copy, par->user_pointer_copy);
 
         node = par;
     }

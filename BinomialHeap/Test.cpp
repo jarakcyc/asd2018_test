@@ -109,6 +109,7 @@ void TestTHeap() {
         }
         cerr << "time used : ";
         cerr << (clock() - start) / 1000.0 << endl;
+        // average result = 0.37
     }
     {///Test_Heap_8
         TBinomialHeap<int> heap;
@@ -209,6 +210,50 @@ void TestTHeap() {
         for (int i = 0; i < n; ++i) {
             sort(q.begin(), q.end());
             Assert(q[0] == heap.get_min(), "Test_Heap_13");
+
+            auto p = order.back();
+            order.pop_back();
+
+            heap.erase(p.first);
+
+            bool found = false;
+            while (!q.empty()) {
+                int cur = q.back();
+                q.pop_back();
+
+                if (cur == p.second && !found) {
+                    found = true;
+                } else {
+                    foo.push_back(cur);
+                }
+            }
+
+            while (!foo.empty()) {
+                q.push_back(foo.back());
+                foo.pop_back();
+            }
+        }
+    }
+    for (int i = 0; i < 1000; ++i) {///Tets_Heap_14
+        TBinomialHeap<int> heap;
+        vector<int> q;
+
+        const int n = 50;
+
+        vector<pair<TBinomialHeap<int>::Pointer, int> > order;
+
+        for (int i = 0; i < n; ++i) {
+            int x = rnd() % n;
+            order.push_back(make_pair(heap.insert(x), x));
+            q.push_back(x);
+        }
+
+        shuffle(order.begin(), order.end(), rnd);
+
+        vector<int> foo;
+        for (int i = 0; i < n; ++i) {
+            sort(q.begin(), q.end());
+            Assert(q[0] == heap.get_min(), "Tets_Heap_14");
 
             auto p = order.back();
             order.pop_back();
