@@ -1,7 +1,7 @@
 #include <bits/stdc++.h>
 
 #include "Test.h"
-#include "THeap.cpp"
+#include "THeap.h"
 
 using namespace std;
 

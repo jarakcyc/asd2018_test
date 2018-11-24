@@ -52,18 +52,18 @@ void TestTVector() {
 }
 
 void TestTHeap() {
-    {
+    {///Test_Heap_1
         THeap<int> heap;
-        Assert(heap.is_empty(), "TestTHeap_test_1");
+        Assert(heap.is_empty(), "Test_Heap_1");
         heap.insert(3);
         heap.insert(1);
         heap.insert(4);
-        Assert(!heap.is_empty(), "TestTHeap_test_2");
-        Assert(heap.get_min() == 1, "TestTHeap_test_3");
-        Assert(heap.extract_min() == 1, "TestTHeap_test_4");
-        Assert(heap.get_min() == 3, "TestTHeap_test_5");
+        Assert(!heap.is_empty(), "Test_Heap_1");
+        Assert(heap.get_min() == 1, "Test_Heap_1");
+        Assert(heap.extract_min() == 1, "Test_Heap_1");
+        Assert(heap.get_min() == 3, "Test_Heap_1");
     }
-    {
+    {///Test_Heap_2
         int start = clock();
         THeap<int> heap;
         priority_queue<int, vector<int>, greater<int> > std_heap;
@@ -74,13 +74,14 @@ void TestTHeap() {
             std_heap.push(x);
         }
         for (int i = 0; i < 1e5; ++i) {
-            Assert(heap.get_min() == std_heap.top(), "TestTVector_test_6");
+            Assert(heap.get_min() == std_heap.top(), "Test_Heap_2");
             heap.extract_min();
             std_heap.pop();
         }
-        cerr << "time used:" << (clock() - start) / 1000.0 << endl;
+        cerr << "Test_Heap_2 time used: " << (clock() - start) / 1000.0 << endl;
+        // average result = 0.3
     }
-    {
+    {///Test_Heap_3
         THeap<int> heap;
 
         auto it5 = heap.insert(5);
@@ -89,24 +90,24 @@ void TestTHeap() {
         auto it4 = heap.insert(4);
 
         heap.erase(it3);
-        Assert(heap.get_min() == 1, "Test_Heap_#1");
+        Assert(heap.get_min() == 1, "Test_Heap_3");
 
         heap.erase(it1);
-        Assert(heap.get_min() == 4, "Test_Heap_#2");
+        Assert(heap.get_min() == 4, "Test_Heap_3");
 
         try {
             heap.erase(it1);
         } catch (...) {
-            cerr << "caught exception" << endl;
+            cerr << "Test_Heap_2 OK" << endl;
         }
 
         heap.erase(it4);
-        Assert(heap.get_min() == 5, "Test_Heap_#3");
+        Assert(heap.get_min() == 5, "Test_Heap_3");
 
         heap.erase(it5);
-        Assert(heap.is_empty(), "Test_Heap_#4");
+        Assert(heap.is_empty(), "Test_Heap_3");
     }
-    {
+    {///Test_Heap_4
         THeap<int> heap;
 
         auto it2 = heap.insert(2);
@@ -115,16 +116,50 @@ void TestTHeap() {
         auto it5 = heap.insert(5);
 
         heap.change(it1, 5);
-        Assert(heap.get_min() == 2, "Test_Heap_Change_1");
+        Assert(heap.get_min() == 2, "Test_Heap_4");
 
         heap.change(it4, 1);
-        Assert(heap.get_min() == 1, "Test_Heap_Change_2");
+        Assert(heap.get_min() == 1, "Test_Heap_4");
     }
-    {
+    {///Test_Heap_5
+        /*
+        insert:
+        2 5 0 4 6 3 1
+        erase:
+        5 0 1 4 2 3 6
+        */
+        THeap<int> heap;
+
+        auto it2 = heap.insert(2);
+        auto it5 = heap.insert(5);
+        auto it0 = heap.insert(0);
+        auto it4 = heap.insert(4);
+        auto it6 = heap.insert(6);
+        auto it3 = heap.insert(3);
+        auto it1 = heap.insert(1);
+
+        Assert(heap.get_min() == 0, "Test_Heap_5");
+
+        heap.erase(it5);
+        Assert(heap.get_min() == 0, "Test_Heap_5");
+        heap.erase(it0);
+        Assert(heap.get_min() == 1, "Test_Heap_5");
+        heap.erase(it1);
+        Assert(heap.get_min() == 2, "Test_Heap_5");
+        heap.erase(it4);
+        Assert(heap.get_min() == 2, "Test_Heap_5");
+        heap.erase(it2);
+        Assert(heap.get_min() == 3, "Test_Heap_5");
+        heap.erase(it3);
+        Assert(heap.get_min() == 6, "Test_Heap_5");
+        heap.erase(it6);
+        Assert(heap.is_empty(), "Test_Heap_5");
+    }
+    for (int iter = 0; iter < 1000; ++iter) {///Test_Heap_6
         THeap<int> heap;
         vector<int> q;
 
-        const int n = 1000;
+        const int n = 50;
 
         vector<pair<THeap<int>::Pointer, int> > order;
 
@@ -139,7 +174,7 @@ void TestTHeap() {
         vector<int> foo;
         for (int i = 0; i < n; ++i) {
             sort(q.begin(), q.end());
-            Assert(q[0] == heap.get_min(), "Heap_erase_test");
+            Assert(q[0] == heap.get_min(), "Test_Heap_6");
 
             auto p = order.back();
             order.pop_back();
@@ -163,5 +198,28 @@ void TestTHeap() {
                 foo.pop_back();
             }
         }
+    }
+    {///Test_Heap_7
+        vector<int> a;
+        const int n = 100000;
+
+        for (int i = 0; i < n; ++i) {
+            a.push_back(i);
+        }
+
+        shuffle(a.begin(), a.end(), rnd);
+
+        int start = clock();
+
+        THeap<int> heap(a.begin(), a.end());
+        sort(a.begin(), a.end());
+
+        assert(a.size() == n);
+        for (int i = 0; i < n; ++i) {
+            Assert(heap.extract_min() == a[i], "Test_Heap_7");
+        }
+
+        cerr << "Test_Heap_7 time used: " << (clock() - start) / 1000.0 << endl;
+        // average result = 0.2
     }
 }

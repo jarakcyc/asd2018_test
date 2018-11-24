@@ -4,6 +4,7 @@
 
 #include <stdexcept>
 #include <iostream>
+#include <cmath>
 
 template<class Key>
 class THeap;
@@ -11,6 +12,9 @@ class THeap;
 template<class Key>
 class THeap {
 private:
+    class Node;
+    class Link;
+
     class Node {
     friend THeap<Key>;
     private:
@@ -18,9 +22,20 @@ private:
 
         Key value;
         int index;
+
+        Link* user_pointer_copy;
+    };
+
+    class Link {
+    friend THeap<Key>;
+    private:
+        Link(Node* node);
+
+        Node* link_node;
     };
 public:
     THeap();
+    ~THeap();
 
     template<class Iterator>
     THeap(Iterator begin, Iterator end);
@@ -39,10 +54,12 @@ public:
 
     class Pointer {
     friend THeap<Key>;
+    public:
+        ~Pointer();
     private:
-        Pointer(Node* node);
+        Pointer(Link* link);
 
-        Node* ptr;
+        Link* ptr;
     };
 private:
     int dimension;
@@ -68,8 +85,27 @@ THeap<Key>::Node::Node(Key _key, int _index) {
 }
 
 template<class Key>
-THeap<Key>::Pointer::Pointer(Node* node) {
-    ptr = node;
+THeap<Key>::Link::Link(Node* node) {
+    link_node = node;
+}
+
+template<class Key>
+THeap<Key>::Pointer::Pointer(Link* link) {
+    ptr = link;
+}
+
+template<class Key>
+THeap<Key>::Pointer::~Pointer() {
+    if (ptr != nullptr && ptr->link_node == nullptr) {
+        delete ptr->link_node;
+    }
+}
+
+template<class Key>
+THeap<Key>::~THeap() {
+    for (int i = 0; i < n_elements; ++i) {
+        delete a[i];
+    }
 }
 
 template<class Key>
@@ -79,8 +115,8 @@ bool THeap<Key>::is_empty() const {
 
 template<class Key>
 void THeap<Key>::swap(int ind_1, int ind_2) {
-    assert(a[ind_1]->index == ind_1);
-    assert(a[ind_2]->index == ind_2);
+    //assert(a[ind_1]->index == ind_1);
+    //assert(a[ind_2]->index == ind_2);
 
     std::swap(a[ind_1], a[ind_2]);
     std::swap(a[ind_1]->index, a[ind_2]->index);
@@ -88,6 +124,9 @@ void THeap<Key>::swap(int ind_1, int ind_2) {
 
 template<class Key>
 void THeap<Key>::sift_up(int x) {
+    if (x >= n_elements) {
+        return;
+    }
     while (x > 0 && a[x]->value < a[(x - 1) / dimension]->value) {
         swap(x, (x - 1) / dimension);
         x = (x - 1) / dimension;
@@ -96,16 +135,16 @@ void THeap<Key>::sift_up(int x) {
 
 template<class Key>
 void THeap<Key>::sift_down(int x) {
-    while (1) {
+    while (true) {
         int minIndex = x;
         for (int i = 0; i < dimension && dimension * x + i + 1 < n_elements; ++i) {
             int curIndex = x * dimension + i + 1;
             if (a[curIndex]->value < a[minIndex]->value)
                 minIndex = curIndex;
         }
-        if (minIndex == x)
+        if (minIndex == x) {
             break;
-        else{
+        } else {
             swap(x, minIndex);
             x = minIndex;
         }
@@ -114,25 +153,32 @@ void THeap<Key>::sift_down(int x) {
 
 template<class Key>
 typename THeap<Key>::Pointer THeap<Key>::insert(Key x) {
-    Node* new_node = new Node(x, a.size());
+    Node* new_node = new Node(x, n_elements);
+
+    Link* new_link = new Link(new_node);
+    new_node->user_pointer_copy = new_link;
 
     a.push_back(new_node);
-    sift_up(n_elements);
     n_elements++;
+    sift_up(n_elements - 1);
 
-    return Pointer(new_node);
+    return Pointer(new_link);
 }
 
 template<class Key>
 Key THeap<Key>::extract_min() {
     if (is_empty()) {
-        throw std::out_of_range("heap is empty");
+        throw std::out_of_range("no elements");
     }
 
     Key value = a[0]->value;
+
+    a[0]->user_pointer_copy->link_node = nullptr;
+
     swap(0, n_elements - 1);
     n_elements--;
 
+    delete a[n_elements];
     a.pop_back();
 
     sift_down(0);
@@ -142,6 +188,9 @@ Key THeap<Key>::extract_min() {
 
 template<class Key>
 Key THeap<Key>::get_min() const {
+    if (is_empty()) {
+        throw std::out_of_range("no elements");
+    }
     return a[0]->value;
 }
 
@@ -151,26 +200,41 @@ int THeap<Key>::get_size() const {
 }
 
 template<class Key>
-void THeap<Key>::erase(Pointer& ptr) {
-    if (ptr.ptr == nullptr) {
-        throw std::out_of_range("no such element");
+void THeap<Key>::erase(Pointer& pointer) {
+    if (pointer.ptr != nullptr && pointer.ptr->link_node == nullptr) {
+        delete pointer.ptr;
+        pointer.ptr = nullptr;
+    }
+    if (pointer.ptr == nullptr) {
+        throw std::out_of_range("no elements");
     }
 
-    int id = ptr.ptr->index;
+    int id = pointer.ptr->link_node->index;
+
     swap(id, n_elements - 1);
     n_elements--;
 
+    delete a[n_elements];
     a.pop_back();
 
+    sift_up(id);
     sift_down(id);
 
-    delete ptr.ptr;
-    ptr.ptr = nullptr;
+    delete pointer.ptr;
+    pointer.ptr = nullptr;
 }
 
 template<class Key>
-void THeap<Key>::change(Pointer ptr, Key key) {
-    int id = ptr.ptr->index;
+void THeap<Key>::change(Pointer pointer, Key key) {
+    if (pointer.ptr != nullptr && pointer.ptr->link_node == nullptr) {
+        delete pointer.ptr;
+        pointer.ptr = nullptr;
+    }
+    if (pointer.ptr == nullptr) {
+        throw std::out_of_range("no such element");
+    }
+
+    int id = pointer.ptr->link_node->index;
 
     a[id]->value = key;
 
@@ -181,12 +245,18 @@ void THeap<Key>::change(Pointer ptr, Key key) {
 template<class Key>
 template<class Iterator>
 THeap<Key>::THeap(Iterator begin, Iterator end) {
+    dimension = 2;
+    n_elements = 0;
+
     Iterator it = begin;
 
     while (it != end) {
-        Node* new_node = new Node(n_elements);
+        Node* new_node = new Node(*it, n_elements);
         a.push_back(new_node);
         n_elements++;
+
+        Link* new_link = new Link(new_node);
+        new_node->user_pointer_copy = new_link;
 
         it++;
     }
@@ -202,7 +272,21 @@ void THeap<Key>::optimize(size_t insertCount, size_t extractCount) {
     b = extractCount
     a * log(n, k) - insert
     b * k * log(n, k) - extract
+    f(k) = (a + b*k) / ln(k)
+    f'(k) = (b * ln(k) - (a + b * k) / k) / ln^2(k)
+    0: b * ln(k) - (a + b * k) / k = 0
+    k * (ln(k) - 1) = a / b
     */
 
-    dimension = max((size_t)2, insertCount / extractCount);
+    const double range = (double)insertCount / (double)extractCount;
+    int left = 2, right = 1e9;
+    while (left + 1 < right) {
+        int middle = (left + right) / 2;
+        if (middle * (log(middle) - 1) < range)
+            left = middle;
+        else
+            right = middle;
+    }
+
+    dimension = left;
 }
