@@ -101,6 +101,7 @@ void TestTHeap() {
 		}
 		cerr << "time used : ";
 		cerr << (clock() - start) / 1000.0 << endl;
+		// average result = 0.295
 	}
 	{
 	    FibonacciHeap<int> heap;
@@ -147,4 +148,171 @@ void TestTHeap() {
             Assert(heap.extract_min() == 2, "row_30");
 	    }
 	}
+	{///Test_Heap_8
+        FibonacciHeap<int> heap;
+
+        auto it1 = heap.insert(1);
+        auto it2 = heap.insert(2);
+
+        heap.erase(it1);
+        Assert(heap.get_min() == 2, "Test_Heap_8");
+        heap.erase(it2);
+        Assert(heap.is_empty(), "Test_Heap_8");
+    }
+    {///Test_Heap_9
+        FibonacciHeap<int> heap;
+
+        auto it1 = heap.insert(1);
+        auto it2 = heap.insert(2);
+
+        heap.erase(it2);
+        Assert(heap.get_min() == 1, "Test_Heap_9");
+        heap.erase(it1);
+        Assert(heap.is_empty(), "Test_Heap_9");
+    }
+    {///Test_Heap_10
+        FibonacciHeap<int> heap;
+
+        auto it5 = heap.insert(5);
+        auto it3 = heap.insert(3);
+        auto it1 = heap.insert(1);
+        auto it4 = heap.insert(4);
+
+        heap.erase(it3);
+        Assert(heap.get_min() == 1, "Test_Heap_10");
+
+        heap.erase(it1);
+        Assert(heap.get_min() == 4, "Test_Heap_10");
+
+        try {
+            heap.erase(it1);
+        } catch (...) {
+            cerr << "caught exception" << endl;
+        }
+
+        heap.erase(it4);
+        Assert(heap.get_min() == 5, "Test_Heap_10");
+
+        heap.erase(it5);
+        Assert(heap.is_empty(), "Test_Heap_10");
+    }
+    /*{///Test_Heap_11
+        FibonacciHeap<int> heap;
+
+        auto it2 = heap.insert(2);
+        auto it1 = heap.insert(1);
+        auto it4 = heap.insert(4);
+        auto it5 = heap.insert(5);
+
+        heap.change(it1, 5);
+        Assert(heap.get_min() == 2, "Test_Heap_11");
+
+        heap.change(it4, 1);
+        Assert(heap.get_min() == 1, "Test_Heap_11");
+    }*/
+    /*{///Test_Heap_12
+        FibonacciHeap<int> heap;
+        FibonacciHeap<int>::Pointer p[10];
+        for (int i = 0; i < 10; ++i)
+            p[i] = heap.insert(i);
+
+        Assert(heap.get_min() == 0, "Test_Heap_12");
+        heap.change(p[5], -1);
+        Assert(heap.get_min() == -1, "Test_Heap_12");
+        heap.extract_min();
+        try {
+            heap.erase(p[5]);
+        }
+        catch (...) {
+            cerr << "Test exception_1 is OK" << endl;
+        }
+    }*/
+    {///Test_Heap_13
+        FibonacciHeap<int> heap;
+        vector<int> q;
+
+        const int n = 1000;
+
+        vector<pair<FibonacciHeap<int>::Pointer, int> > order;
+
+        for (int i = 0; i < n; ++i) {
+            int x = rnd() % n;
+            order.push_back(make_pair(heap.insert(x), x));
+            q.push_back(x);
+        }
+
+        shuffle(order.begin(), order.end(), rnd);
+
+        vector<int> foo;
+        for (int i = 0; i < n; ++i) {
+            sort(q.begin(), q.end());
+            Assert(q[0] == heap.get_min(), "Test_Heap_13");
+
+            auto p = order.back();
+            order.pop_back();
+
+            heap.erase(p.first);
+
+            bool found = false;
+            while (!q.empty()) {
+                int cur = q.back();
+                q.pop_back();
+
+                if (cur == p.second && !found) {
+                    found = true;
+                } else {
+                    foo.push_back(cur);
+                }
+            }
+
+            while (!foo.empty()) {
+                q.push_back(foo.back());
+                foo.pop_back();
+            }
+        }
+    }
+    for (int i = 0; i < 1000; ++i) {///Tets_Heap_14
+        FibonacciHeap<int> heap;
+        vector<int> q;
+
+        const int n = 50;
+
+        vector<pair<FibonacciHeap<int>::Pointer, int> > order;
+
+        for (int i = 0; i < n; ++i) {
+            int x = rnd() % n;
+            order.push_back(make_pair(heap.insert(x), x));
+            q.push_back(x);
+        }
+
+        shuffle(order.begin(), order.end(), rnd);
+
+        vector<int> foo;
+        for (int i = 0; i < n; ++i) {
+            sort(q.begin(), q.end());
+            Assert(q[0] == heap.get_min(), "Tets_Heap_14");
+
+            auto p = order.back();
+            order.pop_back();
+
+            heap.erase(p.first);
+
+            bool found = false;
+            while (!q.empty()) {
+                int cur = q.back();
+                q.pop_back();
+
+                if (cur == p.second && !found) {
+                    found = true;
+                } else {
+                    foo.push_back(cur);
+                }
+            }
+
+            while (!foo.empty()) {
+                q.push_back(foo.back());
+                foo.pop_back();
+            }
+        }
+    }
 }
