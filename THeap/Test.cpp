@@ -220,6 +220,6 @@ void TestTHeap() {
         }
 
         cerr << "Test_Heap_7 time used: " << (clock() - start) / 1000.0 << endl;
-        // average result = 0.2
+        // average result = 0.19
     }
 }

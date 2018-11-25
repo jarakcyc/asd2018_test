@@ -19,6 +19,7 @@ private:
     friend THeap<Key>;
     private:
         Node(Key _key, int _index);
+        ~Node();
 
         Key value;
         int index;
@@ -30,6 +31,8 @@ private:
     friend THeap<Key>;
     private:
         Link(Node* node);
+
+        int count_of_users;
 
         Node* link_node;
     };
@@ -56,6 +59,7 @@ public:
     friend THeap<Key>;
     public:
         ~Pointer();
+        Pointer(const Pointer& p); // copying constructor
     private:
         Pointer(Link* link);
 
@@ -85,8 +89,18 @@ THeap<Key>::Node::Node(Key _key, int _index) {
 }
 
 template<class Key>
+THeap<Key>::Node::~Node() {
+    user_pointer_copy->link_node = nullptr;
+    user_pointer_copy->count_of_users--;
+    if (user_pointer_copy == 0) {
+        delete user_pointer_copy;
+    }
+}
+
+template<class Key>
 THeap<Key>::Link::Link(Node* node) {
     link_node = node;
+    count_of_users = 2;
 }
 
 template<class Key>
@@ -95,9 +109,16 @@ THeap<Key>::Pointer::Pointer(Link* link) {
 }
 
 template<class Key>
+THeap<Key>::Pointer::Pointer(const Pointer& p) {
+    ptr = p.ptr;
+    ptr->count_of_users++;
+}
+
+template<class Key>
 THeap<Key>::Pointer::~Pointer() {
-    if (ptr != nullptr && ptr->link_node == nullptr) {
-        delete ptr->link_node;
+    ptr->count_of_users--;
+    if (ptr->count_of_users == 0) {
+        delete ptr;
     }
 }
 
@@ -173,8 +194,6 @@ Key THeap<Key>::extract_min() {
 
     Key value = a[0]->value;
 
-    a[0]->user_pointer_copy->link_node = nullptr;
-
     swap(0, n_elements - 1);
     n_elements--;
 
@@ -201,11 +220,7 @@ int THeap<Key>::get_size() const {
 
 template<class Key>
 void THeap<Key>::erase(Pointer& pointer) {
-    if (pointer.ptr != nullptr && pointer.ptr->link_node == nullptr) {
-        delete pointer.ptr;
-        pointer.ptr = nullptr;
-    }
-    if (pointer.ptr == nullptr) {
+    if (pointer.ptr->link_node == nullptr) {
         throw std::out_of_range("no elements");
     }
 
@@ -219,18 +234,11 @@ void THeap<Key>::erase(Pointer& pointer) {
 
     sift_up(id);
     sift_down(id);
-
-    delete pointer.ptr;
-    pointer.ptr = nullptr;
 }
 
 template<class Key>
 void THeap<Key>::change(Pointer pointer, Key key) {
-    if (pointer.ptr != nullptr && pointer.ptr->link_node == nullptr) {
-        delete pointer.ptr;
-        pointer.ptr = nullptr;
-    }
-    if (pointer.ptr == nullptr) {
+    if (pointer.ptr->link_node == nullptr) {
         throw std::out_of_range("no such element");
     }
 
