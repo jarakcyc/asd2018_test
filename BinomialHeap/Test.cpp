@@ -109,7 +109,7 @@ void TestTHeap() {
         }
         cerr << "time used : ";
         cerr << (clock() - start) / 1000.0 << endl;
-        // average result = 0.37
+        // average result = 0.36
     }
     {///Test_Heap_8
         TBinomialHeap<int> heap;

@@ -17,6 +17,7 @@ private:
     friend TBinomialHeap<Key>;
     private:
         Node(Key _key);
+        ~Node();
 
         Node* parent;
 
@@ -37,6 +38,8 @@ private:
     private:
         Link(Node* node);
 
+        int count_of_users;
+
         Node* link_node;
     };
 public:
@@ -56,6 +59,7 @@ public:
     public:
         Pointer();
         ~Pointer();
+        Pointer(const Pointer& p); // copying constructor
     friend TBinomialHeap<Key>;
     private:
         Pointer(Link* _ptr);
@@ -93,6 +97,15 @@ TBinomialHeap<Key>::Node::Node(Key _key) {
 }
 
 template<class Key>
+TBinomialHeap<Key>::Node::~Node() {
+    user_pointer_copy->link_node = nullptr;
+    user_pointer_copy->count_of_users--;
+    if (user_pointer_copy->count_of_users == 0) {
+        delete user_pointer_copy;
+    }
+}
+
+template<class Key>
 TBinomialHeap<Key>::~TBinomialHeap() {
     clear(root);
 }
@@ -109,7 +122,8 @@ TBinomialHeap<Key>::Pointer::Pointer() {
 
 template<class Key>
 TBinomialHeap<Key>::Pointer::~Pointer() {
-    if (ptr != nullptr && ptr->link_node == nullptr) {
+    ptr->count_of_users--;
+    if (ptr->count_of_users == 0) {
         delete ptr;
     }
 }
@@ -117,6 +131,12 @@ TBinomialHeap<Key>::Pointer::~Pointer() {
 template<class Key>
 TBinomialHeap<Key>::Pointer::Pointer(Link* _ptr) {
     ptr = _ptr;
+}
+
+template<class Key>
+TBinomialHeap<Key>::Pointer::Pointer(const Pointer& p) {
+    ptr = p.ptr;
+    ptr->count_of_users++;
 }
 
 template<class Key>
@@ -163,7 +183,6 @@ void TBinomialHeap<Key>::clear(Node* node) {
     }
     clear(node->first_son);
     clear(node->right_brother);
-    node->user_pointer_copy->link_node = nullptr;
     delete node;
 }
 
@@ -324,7 +343,6 @@ Key TBinomialHeap<Key>::extract_min() {
 
     children.root = min_node->first_son;
 
-    min_node->user_pointer_copy->link_node = nullptr;
     delete min_node;
 
     merge(children);
@@ -334,11 +352,7 @@ Key TBinomialHeap<Key>::extract_min() {
 
 template<class Key>
 void TBinomialHeap<Key>::erase(Pointer& pointer) {
-    if (pointer.ptr != nullptr && pointer.ptr->link_node == nullptr) {
-        delete pointer.ptr;
-        pointer.ptr = nullptr;
-    }
-    if (pointer.ptr == nullptr) {
+    if (pointer.ptr->link_node == nullptr) {
         throw out_of_range("no such element");
     }
 
@@ -356,9 +370,6 @@ void TBinomialHeap<Key>::erase(Pointer& pointer) {
 
     min_node = node;
     extract_min();
-
-    delete pointer.ptr;
-    pointer.ptr = nullptr;
 }
 
 template<class Key>
