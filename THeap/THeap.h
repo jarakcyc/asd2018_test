@@ -278,23 +278,33 @@ void THeap<Key>::optimize(size_t insertCount, size_t extractCount) {
     /*
     a = insertCount
     b = extractCount
-    a * log(n, k) - insert
-    b * k * log(n, k) - extract
-    f(k) = (a + b*k) / ln(k)
-    f'(k) = (b * ln(k) - (a + b * k) / k) / ln^2(k)
-    0: b * ln(k) - (a + b * k) / k = 0
-    k * (ln(k) - 1) = a / b
+
+    1) b != 0
+        a * log(n, k) - insert
+        b * k * log(n, k) - extract
+        f(k) = (a + b*k) / ln(k)
+        f'(k) = (b * ln(k) - (a + b * k) / k) / ln^2(k)
+        0: b * ln(k) - (a + b * k) / k = 0
+        k * (ln(k) - 1) = a / b
+
+    2) b == 0
+        a * log(n, k) - insert
+        f(k) = a * log(a, k) => k = a
     */
 
-    const double range = (double)insertCount / (double)extractCount;
-    int left = 2, right = 1e9;
-    while (left + 1 < right) {
-        int middle = (left + right) / 2;
-        if (middle * (log(middle) - 1) < range)
-            left = middle;
-        else
-            right = middle;
-    }
+    if (extractCount == 0) {
+        dimension = (int)insertCount;
+    } else {
+        const double range = (double)insertCount / (double)extractCount;
+        int left = 2, right = 1e9;
+        while (left + 1 < right) {
+            int middle = (left + right) / 2;
+            if (middle * (log(middle) - 1) < range)
+                left = middle;
+            else
+                right = middle;
+        }
 
-    dimension = left;
+        dimension = left;
+    }
 }
