@@ -391,7 +391,8 @@ void FibonacciHeap<Key>::cut(Node* node) {
     node->right_brother = nullptr;
     node->left_brother = nullptr;
 
-    last_root->right_brother = node;
+    set_right_brother(last_root, node);
+    set_left_brother(node, last_root);
     last_root = node;
 
     if (min_node->value > node->value) {
@@ -419,9 +420,18 @@ void FibonacciHeap<Key>::decrease(Pointer pointer, Key key) {
 
     Node* node = pointer.ptr->link_node;
 
+    if (node->value < key) {
+        throw std::invalid_argument("key must be less then value in node");
+    }
+
+    node->value = key;
+
     Node* par = node->parent;
 
     if (par == nullptr) {
+        if (min_node->value > node->value) {
+            min_node = node;
+        }
         return;
     }
 
